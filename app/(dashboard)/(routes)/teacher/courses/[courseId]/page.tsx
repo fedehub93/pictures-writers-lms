@@ -2,13 +2,14 @@ import { IconBadge } from "@/components/icon-badge";
 import { auth } from "@clerk/nextjs";
 import { LayoutDashboard } from "lucide-react";
 import { redirect } from "next/navigation";
+import TitleForm from "./_components/title-form";
 
 export const getCourse = async (id: string) => {
   const response = await fetch(`http://127.0.0.1:1337/api/courses/${id}`, {
     headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
   });
   const json = await response.json();
-  return json.data;
+  return { id: json.data.id, ...json.data.attributes };
 };
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
@@ -39,10 +40,11 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
         <div>
           <div className="flex items-center gap-x-2">
-            <IconBadge icon={LayoutDashboard}  />
+            <IconBadge icon={LayoutDashboard} />
             <h2 className="text-xl">Customize your course</h2>
           </div>
         </div>
+        <TitleForm initialData={course} courseId={course.id} />
       </div>
     </div>
   );
