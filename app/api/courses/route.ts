@@ -16,19 +16,13 @@ export async function POST(req: Request) {
       Authorization: `Bearer ${process.env.STRAPI_TOKEN}`,
     };
 
-    const data = {
-      data: {
-        title,
-      },
-    };
+    const response = await axios.post(
+      "http://127.0.0.1:1337/api/courses",
+      { data: { title } },
+      { headers }
+    );
 
-    const result = await fetch("http://127.0.0.1:1337/api/courses", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    });
-    const json = (await result.json()) as { error: string | null; data: any };
-    return NextResponse.json({...json.data});
+    return NextResponse.json({ ...response.data.data });
   } catch (error) {
     console.log("[COURSES]", error);
     return new NextResponse("Internal Error", { status: 500 });
