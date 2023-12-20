@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs";
 import { LayoutDashboard } from "lucide-react";
 import { redirect } from "next/navigation";
 import TitleForm from "./_components/title-form";
+import DescriptionForm from "./_components/description-form";
 
 export const getCourse = async (id: string) => {
   const response = await fetch(`http://127.0.0.1:1337/api/courses/${id}`, {
@@ -43,8 +44,9 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
             <IconBadge icon={LayoutDashboard} />
             <h2 className="text-xl">Customize your course</h2>
           </div>
+          <TitleForm initialData={course} courseId={course.id} />
+          <DescriptionForm initialData={course} courseId={course.id} />
         </div>
-        <TitleForm initialData={course} courseId={course.id} />
       </div>
     </div>
   );
