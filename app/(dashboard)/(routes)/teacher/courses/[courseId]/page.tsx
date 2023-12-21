@@ -5,13 +5,31 @@ import { redirect } from "next/navigation";
 import TitleForm from "./_components/title-form";
 import DescriptionForm from "./_components/description-form";
 import ImageForm from "./_components/image-form";
+import CategoryForm from "./_components/category-form";
 
-export const getCourse = async (id: string) => {
-  const response = await fetch(`http://127.0.0.1:1337/api/courses/${id}?populate=*`, {
-    headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
-  });
-  const json = await response.json();
-  return { id: json.data.id, ...json.data.attributes };
+export const getData = async (id: string) => {
+  const courseResponse = await fetch(
+    `http://127.0.0.1:1337/api/courses/${id}?populate=*`,
+    {
+      headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
+    }
+  );
+  const courseJson = await courseResponse.json();
+
+  const categoriesResponse = await fetch(
+    `http://127.0.0.1:1337/api/course-categories`,
+    {
+      headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
+    }
+  );
+  const categoriesJson = await categoriesResponse.json();
+  return {
+    course: {
+      id: courseJson.data.id,
+      ...courseJson.data.attributes,
+    },
+    categories: { ...categoriesJson },
+  };
 };
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
@@ -19,11 +37,10 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
 
   if (!userId) return redirect("/");
 
-  const course = await getCourse(params.courseId);
+  const { course, categories } = await getData(params.courseId);
 
   if (!course) return redirect("/");
-
-  const requiredFields = [course.title, course.description, course.price];
+  const requiredFields = [course.title, course.description, course.price, course.course_category];
 
   const totalFields = requiredFields.length;
   const completedFields = requiredFields.filter(Boolean).length;
@@ -48,6 +65,16 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
           <TitleForm initialData={course} courseId={course.id} />
           <DescriptionForm initialData={course} courseId={course.id} />
           <ImageForm initialData={course} courseId={course.id} />
+          <CategoryForm
+            initialData={course}
+            courseId={course.id}
+            options={categories.data.map(
+              (category: { id: number; attributes: { name: string } }) => ({
+                label: category.attributes.name,
+                value: category.id,
+              })
+            )}
+          />
         </div>
       </div>
     </div>
