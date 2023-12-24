@@ -4,11 +4,18 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
-import { ImageIcon, Pencil, PlusCircle, UploadCloud, UploadIcon } from "lucide-react";
+import {
+  ImageIcon,
+  Pencil,
+  PlusCircle,
+  UploadCloud,
+  UploadIcon,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
+import { LoadingSpinner } from "@/components/loading-spinner";
 
 interface ImageFormProps {
   initialData: {
@@ -25,6 +32,7 @@ interface ImageFormProps {
 
 const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const toggleEdit = () => setIsEditing((current) => !current);
 
   const router = useRouter();
@@ -40,9 +48,10 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
     formData.append("files", acceptedFiles[0]);
 
     try {
+      setIsLoading(true);
       const response = await axios.post(`/api/upload`, formData);
+      console.log(initialData);
       await axios.patch(`/api/courses/${courseId}`, {
-        ...initialData,
         image: response.data[0].id,
       });
       toast.success("Course updated");
@@ -50,6 +59,8 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
       router.refresh();
     } catch {
       toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
@@ -89,7 +100,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
             />
           </div>
         ))}
-      {isEditing && (
+      {isEditing && !isLoading && (
         <form className="space-y-4 mt-4">
           <div {...getRootProps()}>
             <input {...getInputProps()} />
@@ -107,6 +118,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
           </div>
         </form>
       )}
+      {isEditing && isLoading && <LoadingSpinner className="h-10 w-10" />}
     </div>
   );
 };

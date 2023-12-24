@@ -17,8 +17,8 @@ export async function POST(req: Request) {
     };
 
     const response = await axios.post(
-      "http://127.0.0.1:1337/api/courses",
-      { data: { title } },
+      `${process.env.STRAPI_URL}/api/courses`,
+      { data: { title, user_id: userId } },
       { headers }
     );
 

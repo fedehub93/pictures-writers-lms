@@ -11,12 +11,11 @@ export async function POST(req: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
     const formData = await req.formData();
-    console.log("[FORMDATA]", formData);
     if (!req.formData) {
       return NextResponse.json("Wrong file", { status: 404 });
     }
 
-    const file = formData.getAll("files")[0] as Blob | null;
+    const file = formData.getAll("files")[0] as File | null;
 
     if (!file) {
       return NextResponse.json("Wrong file", { status: 400 });
@@ -26,7 +25,7 @@ export async function POST(req: Request) {
 
     const form = new FormData();
     form.append("files", buffer, {
-      filename: "esempio",
+      filename: file.name,
       contentType: file.type,
     });
 
@@ -36,11 +35,9 @@ export async function POST(req: Request) {
     };
 
     const response = await axios.post(
-      "http://127.0.0.1:1337/api/upload",
+      `${process.env.STRAPI_URL}/api/upload`,
       form,
-      {
-        headers,
-      }
+      { headers }
     );
 
     return NextResponse.json({ ...response.data });

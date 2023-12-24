@@ -1,16 +1,22 @@
 import { IconBadge } from "@/components/icon-badge";
 import { auth } from "@clerk/nextjs";
-import { CircleDollarSign, LayoutDashboard, ListChecks } from "lucide-react";
+import {
+  CircleDollarSign,
+  File,
+  LayoutDashboard,
+  ListChecks,
+} from "lucide-react";
 import { redirect } from "next/navigation";
 import TitleForm from "./_components/title-form";
 import DescriptionForm from "./_components/description-form";
 import ImageForm from "./_components/image-form";
 import CategoryForm from "./_components/category-form";
 import PriceForm from "./_components/price-form";
+import AttachmentForm from "./_components/attachment-form";
 
 export const getData = async (id: string) => {
   const courseResponse = await fetch(
-    `http://127.0.0.1:1337/api/courses/${id}?populate=*`,
+    `${process.env.STRAPI_URL}/api/courses/${id}?populate=*`,
     {
       headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
     }
@@ -18,7 +24,7 @@ export const getData = async (id: string) => {
   const courseJson = await courseResponse.json();
 
   const categoriesResponse = await fetch(
-    `http://127.0.0.1:1337/api/course-categories`,
+    `${process.env.STRAPI_URL}/api/course-categories`,
     {
       headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
     }
@@ -41,6 +47,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const { course, categories } = await getData(params.courseId);
 
   if (!course) return redirect("/");
+
   const requiredFields = [
     course.title,
     course.description,
@@ -95,6 +102,13 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
             <h2>Sell your course</h2>
           </div>
           <PriceForm initialData={course} courseId={course.id} />
+          <div>
+            <div className="flex items-center gap-x-2">
+              <IconBadge icon={File} />
+              <h2>Resources & Attachments</h2>
+            </div>
+            <AttachmentForm initialData={course} courseId={course.id} />
+          </div>
         </div>
       </div>
     </div>

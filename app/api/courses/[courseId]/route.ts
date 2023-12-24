@@ -21,7 +21,7 @@ export async function PATCH(
     };
 
     const course = await axios.put(
-      `http://127.0.0.1:1337/api/courses/${courseId}`,
+      `${process.env.STRAPI_URL}/api/courses/${courseId}`,
       { data: { ...values } },
       { headers }
     );
