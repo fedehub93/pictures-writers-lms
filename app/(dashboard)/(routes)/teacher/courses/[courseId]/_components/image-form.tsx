@@ -50,7 +50,6 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
     try {
       setIsLoading(true);
       const response = await axios.post(`/api/upload`, formData);
-      console.log(initialData);
       await axios.patch(`/api/courses/${courseId}`, {
         image: response.data[0].id,
       });

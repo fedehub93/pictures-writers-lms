@@ -13,6 +13,7 @@ import ImageForm from "./_components/image-form";
 import CategoryForm from "./_components/category-form";
 import PriceForm from "./_components/price-form";
 import AttachmentForm from "./_components/attachment-form";
+import ChaptersForm from "./_components/chapters-form";
 
 export const getData = async (id: string) => {
   const courseResponse = await fetch(
@@ -51,8 +52,10 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const requiredFields = [
     course.title,
     course.description,
+    course.image,
     course.price,
     course.course_category,
+    course.course_chapters.data.some((chapter: any) => chapter),
   ];
 
   const totalFields = requiredFields.length;
@@ -95,7 +98,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
               <IconBadge icon={ListChecks} />
               <h2 className="Course chapters">Course chapters</h2>
             </div>
-            <div>TODO: Chapters</div>
+            <ChaptersForm initialData={course} courseId={course.id} />
           </div>
           <div className="flex items-center gap-x-2">
             <IconBadge icon={CircleDollarSign} />
