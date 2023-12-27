@@ -14,29 +14,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Editor } from "@/components/editor";
+import { Preview } from "@/components/preview";
 
-interface ChapterTitleFormProps {
+interface ChapterDescriptionFormProps {
   initialData: {
-    data: { attributes: { title: string } };
+    data: { attributes: { description: string } };
   };
   courseId: string;
   chapterId: string;
 }
 
 const formSchema = z.object({
-  title: z.string().min(1),
+  description: z.string().min(1),
 });
 
-const ChapterTitleForm = ({
+const ChapterDescriptionForm = ({
   initialData,
   courseId,
   chapterId,
-}: ChapterTitleFormProps) => {
+}: ChapterDescriptionFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const toggleEdit = () => setIsEditing((current) => !current);
 
@@ -44,7 +46,7 @@ const ChapterTitleForm = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: initialData.data.attributes.title },
+    defaultValues: { description: initialData.data.attributes.description },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -66,19 +68,29 @@ const ChapterTitleForm = ({
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
-        Chapter title
+        Chapter description
         <Button onClick={toggleEdit} variant="ghost">
           {isEditing && <>Cancel</>}
           {!isEditing && (
             <>
               <Pencil className="h-4 w-4 mr-2" />
-              Edit title
+              Edit description
             </>
           )}
         </Button>
       </div>
       {!isEditing && (
-        <p className="text-sm mt-2">{initialData.data.attributes.title}</p>
+        <div
+          className={cn(
+            "text-sm mt-2",
+            !initialData.data.attributes.description && "text-slate-500 italic"
+          )}
+        >
+          {!initialData.data.attributes.description && "No description"}
+          {initialData.data.attributes.description && (
+            <Preview value={initialData.data.attributes.description} />
+          )}
+        </div>
       )}
       {isEditing && (
         <Form {...form}>
@@ -88,15 +100,11 @@ const ChapterTitleForm = ({
           >
             <FormField
               control={form.control}
-              name="title"
+              name="description"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input
-                      disabled={isSubmitting}
-                      placeholder="e.g. 'Introduzione al corso'"
-                      {...field}
-                    />
+                    <Editor {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,4 +122,4 @@ const ChapterTitleForm = ({
   );
 };
 
-export default ChapterTitleForm;
+export default ChapterDescriptionForm;
