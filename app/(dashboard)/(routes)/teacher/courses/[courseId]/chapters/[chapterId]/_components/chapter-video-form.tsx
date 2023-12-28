@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import toast from "react-hot-toast";
+import MuxPlayer from "@mux/mux-player-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,7 @@ interface ChapterVideoFormProps {
             };
           };
         };
-        muxData?: any | null;
+        mux_data?: any | null;
       };
     };
   };
@@ -45,7 +46,6 @@ const ChapterVideoForm = ({
   const toggleEdit = () => setIsEditing((current) => !current);
 
   const router = useRouter();
-  console.log(initialData);
   const onDrop = useCallback(async (acceptedFiles: any[]) => {
     // Do something with the files
     const formData = new FormData();
@@ -72,7 +72,6 @@ const ChapterVideoForm = ({
     }
   }, []);
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
-
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
       <div className="font-medium flex items-center justify-between">
@@ -99,7 +98,14 @@ const ChapterVideoForm = ({
             <VideoIcon className="h-10 w-10 text-slate-500" />
           </div>
         ) : (
-          <div className="relative aspect-video mt-2">Video uploaded!</div>
+          <div className="relative aspect-video mt-2">
+            <MuxPlayer
+              playbackId={
+                initialData?.data?.attributes.mux_data?.playback_id ||
+                ""
+              }
+            />
+          </div>
         ))}
       {isEditing && !isLoading && (
         <form className="space-y-4 mt-4">
