@@ -39,34 +39,34 @@ export async function PATCH(
       { headers }
     );
 
-    if (chapter.data?.data?.attributes.video?.data.attributes.url) {
-      const existingMuxData = chapter.data.data.attributes.mux_data;
-      if (existingMuxData) {
-        await Video.Assets.del(existingMuxData.asset_id);
-        await axios.delete(
-          `${process.env.STRAPI_URL}/api/courses/${courseId}/$${chapterId}/mux-data`,
-          { headers }
-        );
-      }
+    // if (chapter.data?.data?.attributes.video?.data.attributes.url) {
+    //   const existingMuxData = chapter.data.data.attributes.mux_data;
+    //   if (existingMuxData) {
+    //     await Video.Assets.del(existingMuxData.asset_id);
+    //     await axios.delete(
+    //       `${process.env.STRAPI_URL}/api/courses/${courseId}/$${chapterId}/mux-data`,
+    //       { headers }
+    //     );
+    //   }
 
-      const asset = await Video.Assets.create({
-        input: chapter.data.data.attributes.video.data.attributes.url,
-        playback_policy: "public",
-        test: false,
-      });
+    //   const asset = await Video.Assets.create({
+    //     input: chapter.data.data.attributes.video.data.attributes.url,
+    //     playback_policy: "public",
+    //     test: false,
+    //   });
 
-      await axios.post(
-        `${process.env.STRAPI_URL}/api/mux-datas`,
-        {
-          data: {
-            chapter_id: chapterId,
-            asset_id: asset.id,
-            playback_id: asset.playback_ids?.[0]?.id,
-          },
-        },
-        { headers }
-      );
-    }
+    //   await axios.post(
+    //     `${process.env.STRAPI_URL}/api/mux-datas`,
+    //     {
+    //       data: {
+    //         chapter_id: chapterId,
+    //         asset_id: asset.id,
+    //         playback_id: asset.playback_ids?.[0]?.id,
+    //       },
+    //     },
+    //     { headers }
+    //   );
+    // }
 
     return NextResponse.json({
       id: chapter.data.id,
