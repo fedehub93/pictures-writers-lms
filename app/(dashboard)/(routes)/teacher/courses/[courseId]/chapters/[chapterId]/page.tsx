@@ -39,7 +39,7 @@ const ChapterIdPage = async ({
   const requiredFields = [
     chapter.data.attributes.title,
     chapter.data.attributes.description,
-    chapter.data.attributes.video,
+    // chapter.data.attributes.video,
   ];
 
   const totalFields = requiredFields.length;
@@ -51,7 +51,7 @@ const ChapterIdPage = async ({
 
   return (
     <>
-      {!chapter.data.attributes.published_at && (
+      {!chapter.data.attributes.isPublished && (
         <Banner
           variant="warning"
           label="This chapter is unpublished. It will not be visible in the course."
@@ -78,7 +78,7 @@ const ChapterIdPage = async ({
                 disabled={!isComplete}
                 courseId={params.courseId}
                 chapterId={params.chapterId}
-                isPublished={chapter.data.attributes.published_at}
+                isPublished={chapter.data.attributes.isPublished}
               />
             </div>
           </div>
