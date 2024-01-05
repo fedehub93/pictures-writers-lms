@@ -6,32 +6,20 @@ import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import {
   File,
-  ImageIcon,
   Loader2,
-  Pencil,
   PlusCircle,
   UploadCloud,
-  UploadIcon,
   X,
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { APIResponse } from "@/types/types";
 
 interface AttachmentFormProps {
-  initialData: {
-    course_attachments: {
-      data: {
-        id: number;
-        attributes: {
-          name: string;
-        };
-      }[];
-    };
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const AttachmentForm = ({ initialData, courseId }: AttachmentFormProps) => {
@@ -96,16 +84,16 @@ const AttachmentForm = ({ initialData, courseId }: AttachmentFormProps) => {
       </div>
       {!isEditing && (
         <>
-          {initialData.course_attachments.data &&
-            initialData.course_attachments.data.length === 0 && (
+          {initialData.data.attributes.course_attachments?.data &&
+            initialData.data.attributes.course_attachments?.data.length === 0 && (
               <p className="text-sm mt-2 text-slate-500 italic">
                 No attachments yet
               </p>
             )}
-          {initialData.course_attachments.data &&
-            initialData.course_attachments.data.length > 0 && (
+          {initialData.data.attributes.course_attachments?.data &&
+            initialData.data.attributes.course_attachments?.data.length > 0 && (
               <div className="space-y-2">
-                {initialData.course_attachments.data.map((attachment) => (
+                {initialData.data.attributes.course_attachments?.data.map((attachment) => (
                   <div
                     key={attachment.id}
                     className="flex items-center p-3 w-full bg-sky-100 border-sky-200 border text-sky-700 rounded-md"

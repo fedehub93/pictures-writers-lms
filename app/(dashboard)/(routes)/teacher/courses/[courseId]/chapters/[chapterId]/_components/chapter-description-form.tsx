@@ -21,13 +21,12 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Editor } from "@/components/editor";
 import { Preview } from "@/components/preview";
+import { APIResponse } from "@/types/types";
 
 interface ChapterDescriptionFormProps {
-  initialData: {
-    data: { attributes: { description: string } };
-  };
-  courseId: string;
-  chapterId: string;
+  initialData: APIResponse<"api::course-chapter.course-chapter">;
+  courseId: number | string;
+  chapterId: number | string;
 }
 
 const formSchema = z.object({

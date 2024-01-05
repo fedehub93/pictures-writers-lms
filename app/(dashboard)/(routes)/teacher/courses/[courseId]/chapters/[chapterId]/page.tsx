@@ -9,6 +9,7 @@ import ChapterAccessForm from "./_components/chapter-access-form";
 import ChapterVideoForm from "./_components/chapter-video-form";
 import { Banner } from "@/components/banner";
 import { ChapterActions } from "./_components/chapter-actions";
+import { APIResponse } from "@/types/types";
 
 export const getData = async (courseId: string, chapterId: string) => {
   const chapterResponse = await fetch(
@@ -17,9 +18,10 @@ export const getData = async (courseId: string, chapterId: string) => {
       headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
     }
   );
-  const courseJson = await chapterResponse.json();
+  const chapter =
+    (await chapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
 
-  return { ...courseJson };
+  return { ...chapter };
 };
 
 const ChapterIdPage = async ({
@@ -30,9 +32,6 @@ const ChapterIdPage = async ({
   const { userId } = auth();
   if (!userId) return redirect("/");
   const chapter = await getData(params.courseId, params.chapterId);
-  chapter.data.attributes.isPublished = chapter.data.attributes.publishedAt
-    ? true
-    : false;
 
   if (!chapter) return redirect("/");
 
@@ -51,7 +50,7 @@ const ChapterIdPage = async ({
 
   return (
     <>
-      {!chapter.data.attributes.isPublished && (
+      {!chapter.data.attributes.publishedAt && (
         <Banner
           variant="warning"
           label="This chapter is unpublished. It will not be visible in the course."
@@ -78,7 +77,7 @@ const ChapterIdPage = async ({
                 disabled={!isComplete}
                 courseId={params.courseId}
                 chapterId={params.chapterId}
-                isPublished={chapter.data.attributes.isPublished}
+                isPublished={chapter.data.attributes.publishedAt ? true : false}
               />
             </div>
           </div>

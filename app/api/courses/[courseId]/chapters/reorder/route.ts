@@ -1,3 +1,4 @@
+import { APIResponse } from "@/types/types";
 import { auth } from "@clerk/nextjs";
 import axios from "axios";
 import { NextResponse } from "next/server";
@@ -21,8 +22,9 @@ export async function PUT(
       `${process.env.STRAPI_URL}/api/courses/${courseId}`,
       { headers }
     );
-    const courseJson = await courseResponse.json();
-    const courseOwner = userId === courseJson.data.attributes.user_id;
+    const course =
+      (await courseResponse.json()) as APIResponse<"api::course.course">;
+    const courseOwner = userId === course.data.attributes.user_id;
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });

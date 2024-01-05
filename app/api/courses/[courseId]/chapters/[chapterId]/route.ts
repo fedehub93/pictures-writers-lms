@@ -2,6 +2,7 @@ import Mux from "@mux/mux-node";
 import { auth } from "@clerk/nextjs";
 import axios from "axios";
 import { NextResponse } from "next/server";
+import { APIResponse, APIResponseCollection } from "@/types/types";
 
 const { Video } = new Mux(
   process.env.MUX_TOKEN_ID!,
@@ -26,8 +27,9 @@ export async function DELETE(
       `${process.env.STRAPI_URL}/api/courses/${courseId}`,
       { headers }
     );
-    const courseJson = await courseResponse.json();
-    const courseOwner = userId === courseJson.data.attributes.user_id;
+    const course =
+      (await courseResponse.json()) as APIResponse<"api::course.course">;
+    const courseOwner = userId === course.data.attributes.user_id;
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -37,16 +39,17 @@ export async function DELETE(
       `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters/${chapterId}`,
       { headers }
     );
-    const chapterJson = await chapterResponse.json();
+    const chapter =
+      (await chapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
 
-    if (!chapterJson.data) {
+    if (!chapter.data) {
       return new NextResponse("Not Found", { status: 404 });
     }
 
-    if (chapterJson.data?.attributes.video?.data?.attributes) {
-      const existingMuxData = chapterJson.data.attributes.mux_data;
+    if (chapter.data?.attributes.video?.data?.attributes) {
+      const existingMuxData = chapter.data.attributes.mux_data;
       if (existingMuxData) {
-        await Video.Assets.del(existingMuxData.asset_id);
+        await Video.Assets.del(existingMuxData.data.attributes.asset_id);
         await axios.delete(
           `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters/${chapterId}/mux-data`,
           { headers }
@@ -54,19 +57,20 @@ export async function DELETE(
       }
     }
 
-    const deletedChapter = await axios.delete(
+    const deletedChapter = (await axios.delete(
       `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters/${chapterId}`,
       { headers }
-    );
+    )) as { data: APIResponse<"api::course-chapter.course-chapter"> };
 
     const publishedChaptersInCourse = await fetch(
       `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters?publicationState=live`,
       { headers }
     );
 
-    const chaptersJson = await publishedChaptersInCourse.json();
+    const chapters =
+      (await publishedChaptersInCourse.json()) as APIResponseCollection<"api::course-chapter.course-chapter">;
 
-    if (!chaptersJson.data.length) {
+    if (!chapters.data.length) {
       await axios.put(
         `${process.env.STRAPI_URL}/api/courses/${courseId}`,
         { data: { publishedAt: null } },

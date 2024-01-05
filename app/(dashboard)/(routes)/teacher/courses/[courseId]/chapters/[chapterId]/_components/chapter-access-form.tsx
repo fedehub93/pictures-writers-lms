@@ -20,16 +20,13 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Editor } from "@/components/editor";
-import { Preview } from "@/components/preview";
 import { Checkbox } from "@/components/ui/checkbox";
+import { APIResponse } from "@/types/types";
 
 interface ChapterAccessFormProps {
-  initialData: {
-    data: { attributes: { is_free: boolean } };
-  };
-  courseId: string;
-  chapterId: string;
+  initialData: APIResponse<"api::course-chapter.course-chapter">;
+  courseId: number | string;
+  chapterId: number | string;
 }
 
 const formSchema = z.object({

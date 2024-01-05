@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs";
 import axios from "axios";
 import { NextResponse } from "next/server";
 import Mux from "@mux/mux-node";
+import { APIResponse } from "@/types/types";
 
 const { Video } = new Mux(
   process.env.MUX_TOKEN_ID!,
@@ -29,34 +30,38 @@ export async function DELETE(
       `${process.env.STRAPI_URL}/api/courses/${courseId}?populate[course_chapters][populate]=mux_data`,
       { headers }
     );
-    const course = await courseResponse.json();
+    const course =
+      (await courseResponse.json()) as APIResponse<"api::course.course">;
     if (!course.data) {
       return new NextResponse("Not found", { status: 400 });
     }
-    
+
     const courseOwner = userId === course.data.attributes.user_id;
-    console.log(courseOwner)
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    for (const chapter of course.data?.attributes?.course_chapters?.data) {
-      if (chapter.attributes.mux_data?.data?.attributes.asset_id) {
-        // await Video.Assets.del(
-        //   chapter.attributes.mux_data?.data?.attributes.asset_id
-        // );
+    if (
+      course.data.attributes.course_chapters?.data &&
+      course.data.attributes.course_chapters?.data.length > 0
+    ) {
+      for (const chapter of course.data.attributes.course_chapters?.data) {
+        if (chapter.attributes.mux_data?.data?.attributes.asset_id) {
+          await Video.Assets.del(
+            chapter.attributes.mux_data?.data?.attributes.asset_id
+          );
+        }
       }
     }
-    console.log(deletedCourse);
 
     const deletedCourseResponse = await fetch(
       `${process.env.STRAPI_URL}/api/courses/${courseId}`,
       { headers, method: "DELETE" }
     );
 
-    const deletedCourse = deletedCourseResponse.json();
-    console.log(deletedCourse);
+    const deletedCourse =
+      (await deletedCourseResponse.json()) as APIResponse<"api::course.course">;
 
     return NextResponse.json({ ...deletedCourse });
   } catch (error) {

@@ -20,12 +20,11 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { APIResponse } from "@/types/types";
 
 interface DescriptionFormProps {
-  initialData: {
-    description: string;
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const formSchema = z.object({
@@ -42,7 +41,7 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: { description: initialData.data.attributes.description },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -76,10 +75,10 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.description && "text-slate-500 italic"
+            !initialData.data.attributes.description && "text-slate-500 italic"
           )}
         >
-          {initialData.description || "No description"}
+          {initialData.data.attributes.description || "No description"}
         </p>
       )}
       {isEditing && (

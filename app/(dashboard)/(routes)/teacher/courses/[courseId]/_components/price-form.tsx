@@ -22,12 +22,11 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/lib/format";
+import { APIResponse } from "@/types/types";
 
 interface PriceFormProps {
-  initialData: {
-    price: number;
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const formSchema = z.object({
@@ -42,7 +41,7 @@ const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { price: initialData?.price || undefined },
+    defaultValues: { price: initialData.data.attributes.price || undefined },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -76,10 +75,12 @@ const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.price && "text-slate-500 italic"
+            !initialData.data.attributes.price && "text-slate-500 italic"
           )}
         >
-          {initialData.price ? formatPrice(initialData.price) : "No price"}
+          {initialData.data.attributes.price
+            ? formatPrice(initialData.data.attributes.price)
+            : "No price"}
         </p>
       )}
       {isEditing && (

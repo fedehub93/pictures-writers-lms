@@ -1,3 +1,4 @@
+import { APIResponse } from "@/types/types";
 import { auth } from "@clerk/nextjs";
 import axios from "axios";
 import { NextResponse } from "next/server";
@@ -22,8 +23,9 @@ export async function POST(
       `${process.env.STRAPI_URL}/api/courses/${courseId}`,
       { headers }
     );
-    const courseJson = await courseResponse.json();
-    const courseOwner = userId === courseJson.data.attributes.user_id;
+    const course =
+      (await courseResponse.json()) as APIResponse<"api::course.course">;
+    const courseOwner = userId === course.data.attributes.user_id;
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -33,12 +35,13 @@ export async function POST(
       `${process.env.STRAPI_URL}/api/courses/${courseId}/last-chapter`,
       { headers }
     );
-    const lastChapter = await lastChapterResponse.json();
-    const newPosition = lastChapter.data
+    const lastChapter =
+      (await lastChapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
+    const newPosition = lastChapter.data?.attributes.position
       ? lastChapter.data.attributes.position + 1
       : 1;
 
-    const chapter = await axios.post(
+    const chapter = (await axios.post(
       `${process.env.STRAPI_URL}/api/course-chapters`,
       {
         data: {
@@ -49,7 +52,7 @@ export async function POST(
         },
       },
       { headers }
-    );
+    )) as { data: APIResponse<"api::course-chapter.course-chapter"> };
 
     return NextResponse.json({ ...chapter.data });
   } catch (error) {

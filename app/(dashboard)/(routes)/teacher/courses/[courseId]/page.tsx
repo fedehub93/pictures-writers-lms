@@ -16,6 +16,7 @@ import AttachmentForm from "./_components/attachment-form";
 import ChaptersForm from "./_components/chapters-form";
 import { Banner } from "@/components/banner";
 import { Actions } from "./_components/actions";
+import { APIResponse, APIResponseCollection } from "@/types/types";
 
 export const getData = async (id: string) => {
   const courseResponse = await fetch(
@@ -24,7 +25,8 @@ export const getData = async (id: string) => {
       headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
     }
   );
-  const courseJson = await courseResponse.json();
+  const courseJson =
+    (await courseResponse.json()) as APIResponse<"api::course.course">;
 
   const categoriesResponse = await fetch(
     `${process.env.STRAPI_URL}/api/course-categories`,
@@ -32,13 +34,13 @@ export const getData = async (id: string) => {
       headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
     }
   );
-  const categoriesJson = await categoriesResponse.json();
+
+  const categoriesJson =
+    (await categoriesResponse.json()) as APIResponseCollection<"api::course-category.course-category">;
+
   return {
-    course: {
-      id: courseJson.data?.id,
-      ...courseJson.data?.attributes,
-    },
-    categories: { ...categoriesJson },
+    course: courseJson,
+    categories: categoriesJson,
   };
 };
 
@@ -52,12 +54,14 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   if (!course) return redirect("/");
 
   const requiredFields = [
-    course.title,
-    course.description,
-    course.image?.data,
-    course.price,
-    course.course_category,
-    course.course_chapters?.data?.some((chapter: any) => chapter),
+    course.data.attributes.title,
+    course.data.attributes.description,
+    course.data.attributes.image?.data,
+    course.data.attributes.price,
+    course.data.attributes.course_category,
+    course.data.attributes.course_chapters?.data?.some(
+      (chapter: any) => chapter
+    ),
   ];
 
   const totalFields = requiredFields.length;
@@ -67,7 +71,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
 
   return (
     <>
-      {!course.publishedAt && (
+      {!course.data.attributes.publishedAt && (
         <Banner label="This course is unpublished. It will not be visible to the students." />
       )}
       <div className="p-6">
@@ -81,7 +85,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
           <Actions
             disabled={!isComplete}
             courseId={params.courseId}
-            isPublished={course.publishedAt ? true : false}
+            isPublished={course.data.attributes.publishedAt ? true : false}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
@@ -90,12 +94,12 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
               <IconBadge icon={LayoutDashboard} />
               <h2 className="text-xl">Customize your course</h2>
             </div>
-            <TitleForm initialData={course} courseId={course.id} />
-            <DescriptionForm initialData={course} courseId={course.id} />
-            <ImageForm initialData={course} courseId={course.id} />
+            <TitleForm initialData={course} courseId={course.data.id} />
+            <DescriptionForm initialData={course} courseId={course.data.id} />
+            <ImageForm initialData={course} courseId={course.data.id} />
             <CategoryForm
               initialData={course}
-              courseId={course.id}
+              courseId={course.data.id}
               options={categories.data.map(
                 (category: { id: number; attributes: { name: string } }) => ({
                   label: category.attributes.name,
@@ -110,19 +114,19 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
                 <IconBadge icon={ListChecks} />
                 <h2 className="Course chapters">Course chapters</h2>
               </div>
-              <ChaptersForm initialData={course} courseId={course.id} />
+              <ChaptersForm initialData={course} courseId={course.data.id} />
             </div>
             <div className="flex items-center gap-x-2">
               <IconBadge icon={CircleDollarSign} />
               <h2>Sell your course</h2>
             </div>
-            <PriceForm initialData={course} courseId={course.id} />
+            <PriceForm initialData={course} courseId={course.data.id} />
             <div>
               <div className="flex items-center gap-x-2">
                 <IconBadge icon={File} />
                 <h2>Resources & Attachments</h2>
               </div>
-              <AttachmentForm initialData={course} courseId={course.id} />
+              <AttachmentForm initialData={course} courseId={course.data.id} />
             </div>
           </div>
         </div>

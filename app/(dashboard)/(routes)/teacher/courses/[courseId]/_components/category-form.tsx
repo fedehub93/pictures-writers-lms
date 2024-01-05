@@ -20,16 +20,11 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { APIResponse } from "@/types/types";
 
 interface CategoryFormProps {
-  initialData: {
-    course_category: {
-      data: {
-        id: number;
-      } | null;
-    };
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
   options: { label: string; value: number }[];
 }
 
@@ -50,7 +45,8 @@ const CategoryForm = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      course_category: initialData?.course_category.data?.id || 0,
+      course_category:
+        initialData.data.attributes.course_category?.data?.id || 0,
     },
   });
 
@@ -68,7 +64,8 @@ const CategoryForm = ({
   };
 
   const selectedOption = options.find(
-    (option) => option.value === initialData.course_category.data?.id
+    (option) =>
+      option.value === initialData.data.attributes.course_category?.data?.id
   );
 
   return (
@@ -89,7 +86,8 @@ const CategoryForm = ({
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.course_category && "text-slate-500 italic"
+            !initialData.data.attributes.course_category &&
+              "text-slate-500 italic"
           )}
         >
           {selectedOption?.label || "No category"}

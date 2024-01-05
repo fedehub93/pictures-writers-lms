@@ -5,35 +5,17 @@ import toast from "react-hot-toast";
 import MuxPlayer from "@mux/mux-player-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Pencil,
-  PlusCircle,
-  UploadCloud,
-  UploadIcon,
-  VideoIcon,
-} from "lucide-react";
+import { Pencil, PlusCircle, UploadCloud, VideoIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDropzone } from "react-dropzone";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { APIResponse } from "@/types/types";
 
 interface ChapterVideoFormProps {
-  initialData: {
-    data: {
-      attributes: {
-        video: {
-          data: {
-            attributes: {
-              url: string;
-            };
-          };
-        };
-        mux_data?: any | null;
-      };
-    };
-  };
-  courseId: string;
-  chapterId: string;
+  initialData: APIResponse<"api::course-chapter.course-chapter">;
+  courseId: number | string;
+  chapterId: number | string;
 }
 
 const ChapterVideoForm = ({
@@ -101,8 +83,8 @@ const ChapterVideoForm = ({
           <div className="relative aspect-video mt-2">
             <MuxPlayer
               playbackId={
-                initialData?.data?.attributes.mux_data?.playback_id ||
-                ""
+                initialData?.data?.attributes.mux_data?.data.attributes
+                  .playback_id || ""
               }
             />
           </div>

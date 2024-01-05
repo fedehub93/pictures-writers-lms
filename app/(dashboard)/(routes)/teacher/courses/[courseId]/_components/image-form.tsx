@@ -16,18 +16,11 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
 import { LoadingSpinner } from "@/components/loading-spinner";
+import { APIResponse } from "@/types/types";
 
 interface ImageFormProps {
-  initialData: {
-    image: {
-      data: {
-        attributes: {
-          url: string;
-        };
-      };
-    };
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
@@ -70,13 +63,13 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
         Course image
         <Button onClick={toggleEdit} variant="ghost">
           {isEditing && <>Cancel</>}
-          {!isEditing && !initialData.image && (
+          {!isEditing && !initialData.data.attributes.image && (
             <>
               <PlusCircle className="h-4 w-4 mr-2" />
               Add an image
             </>
           )}
-          {!isEditing && initialData.image && (
+          {!isEditing && initialData.data.attributes.image && (
             <>
               <Pencil className="h-4 w-4 mr-2" />
               Edit image
@@ -85,7 +78,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
         </Button>
       </div>
       {!isEditing &&
-        (!initialData.image.data ? (
+        (!initialData.data.attributes.image?.data ? (
           <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
             <ImageIcon className="h-10 w-10 text-slate-500" />
           </div>
@@ -95,7 +88,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
               alt="upload"
               fill
               className="object-cover rounded-md"
-              src={initialData.image.data.attributes.url}
+              src={initialData.data.attributes.image.data.attributes.url}
             />
           </div>
         ))}

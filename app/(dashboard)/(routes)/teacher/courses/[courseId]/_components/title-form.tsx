@@ -19,12 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { APIResponse } from "@/types/types";
 
 interface TitleFormProps {
-  initialData: {
-    title: string;
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const formSchema = z.object({
@@ -41,7 +40,7 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData,
+    defaultValues: { title: initialData.data.attributes.title },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -71,7 +70,9 @@ const TitleForm = ({ initialData, courseId }: TitleFormProps) => {
           )}
         </Button>
       </div>
-      {!isEditing && <p className="text-sm mt-2">{initialData.title}</p>}
+      {!isEditing && (
+        <p className="text-sm mt-2">{initialData.data.attributes.title}</p>
+      )}
       {isEditing && (
         <Form {...form}>
           <form

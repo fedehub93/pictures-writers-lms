@@ -22,13 +22,11 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ChaptersList } from "./chapters-list";
+import { APIResponse } from "@/types/types";
 
 interface ChaptersFormProps {
-  initialData: {
-    title: string;
-    course_chapters: { data: any[] };
-  };
-  courseId: string;
+  initialData: APIResponse<"api::course.course">;
+  courseId: number;
 }
 
 const formSchema = z.object({
@@ -132,14 +130,16 @@ const ChaptersForm = ({ initialData, courseId }: ChaptersFormProps) => {
         <div
           className={cn(
             "text-sm mt-2",
-            !initialData.course_chapters.data.length && "text-slate-500 italic"
+            !initialData.data.attributes.course_chapters?.data.length &&
+              "text-slate-500 italic"
           )}
         >
-          {!initialData.course_chapters.data.length && "No chapters"}
+          {!initialData.data.attributes.course_chapters?.data.length &&
+            "No chapters"}
           <ChaptersList
             onEdit={onEdit}
             onReorder={onReorder}
-            items={initialData.course_chapters.data || []}
+            items={initialData.data.attributes.course_chapters?.data || []}
           />
         </div>
       )}
