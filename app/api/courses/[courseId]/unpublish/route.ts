@@ -1,42 +1,43 @@
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 
-export async function POST(
+export async function PATCH(
   req: Request,
   { params }: { params: { courseId: string } }
 ) {
   try {
     const { userId } = auth();
     const { courseId } = params;
-    const { url } = await req.json();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const courseOwner = await db.course.findUnique({
+    const course = await db.course.findUnique({
       where: {
         id: courseId,
         userId,
       },
     });
 
-    if (!courseOwner) {
-      return new NextResponse("Unauthorized", { status: 401 });
+    if (!course) {
+      return new NextResponse("Not found", { status: 404 });
     }
 
-    const attachment = await db.attachment.create({
+    const unpublishedCourse = await db.course.update({
+      where: {
+        id: courseId,
+        userId,
+      },
       data: {
-        url,
-        name: url.split("/").pop(),
-        courseId,
+        isPublished: false,
       },
     });
 
-    return NextResponse.json(attachment);
+    return NextResponse.json(unpublishedCourse);
   } catch (error) {
-    console.log("ATTACHMENT_ID", error);
+    console.log("[COURSE_ID_UNPUBLISH]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }

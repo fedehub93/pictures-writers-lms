@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
@@ -22,11 +21,11 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { formatPrice } from "@/lib/format";
-import { APIResponse } from "@/types/types";
+import { Course } from "@prisma/client";
 
 interface PriceFormProps {
-  initialData: APIResponse<"api::course.course">;
-  courseId: number;
+  initialData: Course;
+  courseId: string;
 }
 
 const formSchema = z.object({
@@ -41,7 +40,7 @@ const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { price: initialData.data.attributes.price || undefined },
+    defaultValues: { price: initialData.price || undefined },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -75,11 +74,11 @@ const PriceForm = ({ initialData, courseId }: PriceFormProps) => {
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.price && "text-slate-500 italic"
+            !initialData.price && "text-slate-500 italic"
           )}
         >
-          {initialData.data.attributes.price
-            ? formatPrice(initialData.data.attributes.price)
+          {initialData.price
+            ? formatPrice(initialData.price)
             : "No price"}
         </p>
       )}

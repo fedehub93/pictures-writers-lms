@@ -10,19 +10,7 @@ import ChapterVideoForm from "./_components/chapter-video-form";
 import { Banner } from "@/components/banner";
 import { ChapterActions } from "./_components/chapter-actions";
 import { APIResponse } from "@/types/types";
-
-export const getData = async (courseId: string, chapterId: string) => {
-  const chapterResponse = await fetch(
-    `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters/${chapterId}`,
-    {
-      headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
-    }
-  );
-  const chapter =
-    (await chapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
-
-  return { ...chapter };
-};
+import { db } from "@/lib/db";
 
 const ChapterIdPage = async ({
   params,
@@ -30,16 +18,22 @@ const ChapterIdPage = async ({
   params: { courseId: string; chapterId: string };
 }) => {
   const { userId } = auth();
+
   if (!userId) return redirect("/");
-  const chapter = await getData(params.courseId, params.chapterId);
+
+  const chapter = await db.chapter.findUnique({
+    where: {
+      id: params.chapterId,
+      courseId: params.courseId,
+    },
+    include: {
+      muxData: true,
+    },
+  });
 
   if (!chapter) return redirect("/");
 
-  const requiredFields = [
-    chapter.data.attributes.title,
-    chapter.data.attributes.description,
-    // chapter.data.attributes.video,
-  ];
+  const requiredFields = [chapter.title, chapter.description, chapter.videoUrl];
 
   const totalFields = requiredFields.length;
   const completedField = requiredFields.filter(Boolean).length;
@@ -50,7 +44,7 @@ const ChapterIdPage = async ({
 
   return (
     <>
-      {!chapter.data.attributes.publishedAt && (
+      {!chapter.isPublished && (
         <Banner
           variant="warning"
           label="This chapter is unpublished. It will not be visible in the course."
@@ -77,7 +71,7 @@ const ChapterIdPage = async ({
                 disabled={!isComplete}
                 courseId={params.courseId}
                 chapterId={params.chapterId}
-                isPublished={chapter.data.attributes.publishedAt ? true : false}
+                isPublished={chapter.isPublished ? true : false}
               />
             </div>
           </div>

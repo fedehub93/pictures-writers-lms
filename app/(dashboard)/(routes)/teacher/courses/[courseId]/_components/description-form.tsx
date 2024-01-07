@@ -20,11 +20,11 @@ import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { APIResponse } from "@/types/types";
+import { Course } from "@prisma/client";
 
 interface DescriptionFormProps {
-  initialData: APIResponse<"api::course.course">;
-  courseId: number;
+  initialData: Course;
+  courseId: string;
 }
 
 const formSchema = z.object({
@@ -41,7 +41,7 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { description: initialData.data.attributes.description },
+    defaultValues: { description: initialData?.description || "" },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -75,10 +75,10 @@ const DescriptionForm = ({ initialData, courseId }: DescriptionFormProps) => {
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.description && "text-slate-500 italic"
+            !initialData.description && "text-slate-500 italic"
           )}
         >
-          {initialData.data.attributes.description || "No description"}
+          {initialData.description || "No description"}
         </p>
       )}
       {isEditing && (

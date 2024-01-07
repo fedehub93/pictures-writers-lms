@@ -14,19 +14,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Loader2, Pencil, PlusCircle } from "lucide-react";
+import { Loader2, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ChaptersList } from "./chapters-list";
-import { APIResponse } from "@/types/types";
+import { Chapter, Course } from "@prisma/client";
 
 interface ChaptersFormProps {
-  initialData: APIResponse<"api::course.course">;
-  courseId: number;
+  initialData: Course & { chapters: Chapter[] };
+  courseId: string;
 }
 
 const formSchema = z.object({
@@ -58,7 +57,7 @@ const ChaptersForm = ({ initialData, courseId }: ChaptersFormProps) => {
     }
   };
 
-  const onReorder = async (updateData: { id: number; position: number }[]) => {
+  const onReorder = async (updateData: { id: string; position: number }[]) => {
     try {
       setisUpdating(true);
 
@@ -74,7 +73,7 @@ const ChaptersForm = ({ initialData, courseId }: ChaptersFormProps) => {
     }
   };
 
-  const onEdit = (id: number) => {
+  const onEdit = (id: string) => {
     router.push(`/teacher/courses/${courseId}/chapters/${id}`);
   };
 
@@ -130,16 +129,14 @@ const ChaptersForm = ({ initialData, courseId }: ChaptersFormProps) => {
         <div
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.course_chapters?.data.length &&
-              "text-slate-500 italic"
+            !initialData.chapters.length && "text-slate-500 italic"
           )}
         >
-          {!initialData.data.attributes.course_chapters?.data.length &&
-            "No chapters"}
+          {!initialData.chapters.length && "No chapters"}
           <ChaptersList
             onEdit={onEdit}
             onReorder={onReorder}
-            items={initialData.data.attributes.course_chapters?.data || []}
+            items={initialData.chapters || []}
           />
         </div>
       )}

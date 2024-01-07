@@ -1,6 +1,5 @@
-import { APIResponse } from "@/types/types";
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
-import axios from "axios";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -17,44 +16,37 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const headers = { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` };
-
-    const courseResponse = await fetch(
-      `${process.env.STRAPI_URL}/api/courses/${courseId}`,
-      { headers }
-    );
-    const course =
-      (await courseResponse.json()) as APIResponse<"api::course.course">;
-    const courseOwner = userId === course.data.attributes.user_id;
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const lastChapterResponse = await fetch(
-      `${process.env.STRAPI_URL}/api/courses/${courseId}/last-chapter`,
-      { headers }
-    );
-    const lastChapter =
-      (await lastChapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
-    const newPosition = lastChapter.data?.attributes.position
-      ? lastChapter.data.attributes.position + 1
-      : 1;
-
-    const chapter = (await axios.post(
-      `${process.env.STRAPI_URL}/api/course-chapters`,
-      {
-        data: {
-          title,
-          course: courseId,
-          position: newPosition,
-          publishedAt: null,
-        },
+    const lastChapter = await db.chapter.findFirst({
+      where: {
+        courseId,
       },
-      { headers }
-    )) as { data: APIResponse<"api::course-chapter.course-chapter"> };
+      orderBy: {
+        position: "desc",
+      },
+    });
 
-    return NextResponse.json({ ...chapter.data });
+    const newPosition = lastChapter ? lastChapter.position + 1 : 1;
+
+    const chapter = await db.chapter.create({
+      data: {
+        title,
+        courseId,
+        position: newPosition,
+      },
+    });
+
+    return NextResponse.json(chapter);
   } catch (error) {
     console.log("[CHAPTERS]", error);
     return new NextResponse("Internal Error", { status: 500 });

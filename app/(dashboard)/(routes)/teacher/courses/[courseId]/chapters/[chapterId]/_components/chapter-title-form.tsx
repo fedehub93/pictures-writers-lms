@@ -19,11 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Chapter } from "@prisma/client";
 
 interface ChapterTitleFormProps {
-  initialData: {
-    data: { attributes: { title: string } };
-  };
+  initialData: Chapter;
   courseId: string;
   chapterId: string;
 }
@@ -44,7 +43,7 @@ const ChapterTitleForm = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { title: initialData.data.attributes.title },
+    defaultValues: { title: initialData.title },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -77,9 +76,7 @@ const ChapterTitleForm = ({
           )}
         </Button>
       </div>
-      {!isEditing && (
-        <p className="text-sm mt-2">{initialData.data.attributes.title}</p>
-      )}
+      {!isEditing && <p className="text-sm mt-2">{initialData.title}</p>}
       {isEditing && (
         <Form {...form}>
           <form

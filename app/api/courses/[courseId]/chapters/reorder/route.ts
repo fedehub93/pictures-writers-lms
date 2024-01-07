@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 import { APIResponse } from "@/types/types";
 import { auth } from "@clerk/nextjs";
 import axios from "axios";
@@ -5,7 +6,7 @@ import { NextResponse } from "next/server";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { courseId: number } }
+  { params }: { params: { courseId: string } }
 ) {
   try {
     const { userId } = auth();
@@ -16,30 +17,22 @@ export async function PUT(
 
     const { list } = await req.json();
 
-    const headers = { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` };
-
-    const courseResponse = await fetch(
-      `${process.env.STRAPI_URL}/api/courses/${courseId}`,
-      { headers }
-    );
-    const course =
-      (await courseResponse.json()) as APIResponse<"api::course.course">;
-    const courseOwner = userId === course.data.attributes.user_id;
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: courseId,
+        userId,
+      },
+    });
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     for (let item of list) {
-      await axios.put(
-        `${process.env.STRAPI_URL}/api/course-chapters/${item.id}`,
-        {
-          data: {
-            position: item.position,
-          },
-        },
-        { headers }
-      );
+      await db.chapter.update({
+        where: { id: item.id },
+        data: { position: item.position },
+      });
     }
 
     return new NextResponse("Success", { status: 200 });

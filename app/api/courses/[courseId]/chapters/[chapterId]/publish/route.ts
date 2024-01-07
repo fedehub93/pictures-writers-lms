@@ -1,6 +1,5 @@
-import { APIResponse } from "@/types/types";
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
-import axios from "axios";
 import { NextResponse } from "next/server";
 
 export async function PATCH(
@@ -15,44 +14,51 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const headers = { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` };
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
 
-    const courseResponse = await fetch(
-      `${process.env.STRAPI_URL}/api/courses/${courseId}`,
-      { headers }
-    );
-    const course =
-      (await courseResponse.json()) as APIResponse<"api::course.course">;
-    const courseOwner = userId === course.data.attributes.user_id;
+    const courseOwner = await db.course.findUnique({
+      where: {
+        id: params.courseId,
+        userId,
+      },
+    });
 
     if (!courseOwner) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const chapterResponse = await fetch(
-      `${process.env.STRAPI_URL}/api/courses/${courseId}/chapters/${chapterId}`,
-      { headers }
-    );
-    const chapterJson =
-      (await chapterResponse.json()) as APIResponse<"api::course-chapter.course-chapter">;
+    const chapter = await db.chapter.findUnique({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+    });
+
+    const muxData = await db.muxData.findUnique({
+      where: { chapterId },
+    });
 
     if (
-      !chapterJson.data ||
-      // !chapterJson.data.attributes.mux_data?.data ||
-      // !chapterJson.data.attributes.video?.data ||
-      !chapterJson.data.attributes.title ||
-      !chapterJson.data.attributes.description
+      !chapter ||
+      !muxData ||
+      !chapter.title ||
+      !chapter.description ||
+      !chapter.videoUrl
     ) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    const chapter = (await axios.put(
-      `${process.env.STRAPI_URL}/api/course-chapters/${chapterId}`,
-      { data: { publishedAt: new Date() } },
-      { headers }
-    )) as { data: APIResponse<"api::course-chapter.course-chapter"> };
+    const publishedChapter = await db.chapter.update({
+      where: {
+        id: chapterId,
+        courseId,
+      },
+      data: { isPublished: true },
+    });
 
-    return NextResponse.json({ ...chapter.data });
+    return NextResponse.json(publishedChapter);
   } catch (error) {
     console.log("[CHAPTER_PUBLISH]");
     return new NextResponse("Internal Error", { status: 500 });

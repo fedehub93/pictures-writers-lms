@@ -11,11 +11,12 @@ import {
 import { cn } from "@/lib/utils";
 import { Grip, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Chapter } from "@prisma/client";
 
 interface ChaptersListProps {
-  items: any[];
-  onReorder: (updateDate: { id: number; position: number }[]) => void;
-  onEdit: (id: number) => void;
+  items: Chapter[];
+  onReorder: (updateDate: { id: string; position: number }[]) => void;
+  onEdit: (id: string) => void;
 }
 
 export const ChaptersList = ({
@@ -65,15 +66,15 @@ export const ChaptersList = ({
           <div {...provided.droppableProps} ref={provided.innerRef}>
             {chapters.map((chapter, index) => (
               <Draggable
-                key={chapter.attributes.title}
-                draggableId={chapter.attributes.title}
+                key={chapter.title}
+                draggableId={chapter.title}
                 index={index}
               >
                 {(provided) => (
                   <div
                     className={cn(
                       "flex items-center gap-x-2 bg-slate-200 border-slate-200 border text-slate-700 rounded-md mb-4 text-sm",
-                      chapter.attributes.publishedAt &&
+                      chapter.isPublished &&
                         "bg-sky-100 border-sky-200 text-sky-700"
                     )}
                     ref={provided.innerRef}
@@ -82,23 +83,23 @@ export const ChaptersList = ({
                     <div
                       className={cn(
                         "px-2 py-3 border-r border-r-slate-200 hover:bg-slate-300 rounded-l-md transition",
-                        chapter.attributes.publishedAt &&
+                        chapter.isPublished &&
                           "border-r-sky-200 hover:bg-sky-200"
                       )}
                       {...provided.dragHandleProps}
                     >
                       <Grip className="h-5 w-5" />
                     </div>
-                    {chapter.attributes.title}
+                    {chapter.title}
                     <div className="ml-auto pr-2 flex items-center gap-x-2">
-                      {chapter.attributes.is_free && <Badge>Free</Badge>}
+                      {chapter.isFree && <Badge>Free</Badge>}
                       <Badge
                         className={cn(
                           "bg-slate-500",
-                          chapter.attributes.publishedAt && "bg-sky-700"
+                          chapter.isPublished && "bg-sky-700"
                         )}
                       >
-                        {chapter.attributes.publishedAt ? "Published" : "Draft"}
+                        {chapter.isPublished ? "Published" : "Draft"}
                       </Badge>
                       <Pencil
                         onClick={() => onEdit(chapter.id)}

@@ -21,15 +21,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { APIResponse } from "@/types/types";
+import { Course } from "@prisma/client";
 
 interface CategoryFormProps {
-  initialData: APIResponse<"api::course.course">;
-  courseId: number;
-  options: { label: string; value: number }[];
+  initialData: Course;
+  courseId: string;
+  options: { label: string; value: string }[];
 }
 
 const formSchema = z.object({
-  course_category: z.number().min(1),
+  categoryId: z.string().min(1),
 });
 
 const CategoryForm = ({
@@ -45,8 +46,7 @@ const CategoryForm = ({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      course_category:
-        initialData.data.attributes.course_category?.data?.id || 0,
+      categoryId: initialData?.categoryId || "",
     },
   });
 
@@ -64,8 +64,7 @@ const CategoryForm = ({
   };
 
   const selectedOption = options.find(
-    (option) =>
-      option.value === initialData.data.attributes.course_category?.data?.id
+    (option) => option.value === initialData?.categoryId
   );
 
   return (
@@ -86,8 +85,7 @@ const CategoryForm = ({
         <p
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.course_category &&
-              "text-slate-500 italic"
+            !initialData?.categoryId && "text-slate-500 italic"
           )}
         >
           {selectedOption?.label || "No category"}
@@ -101,7 +99,7 @@ const CategoryForm = ({
           >
             <FormField
               control={form.control}
-              name="course_category"
+              name="categoryId"
               render={({ field }) => {
                 return (
                   <FormItem>

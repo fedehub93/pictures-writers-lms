@@ -18,17 +18,6 @@ export async function POST(req: Request) {
       },
     });
 
-    // const headers = {
-    //   "Content-Type": "application/json",
-    //   Authorization: `Bearer ${process.env.STRAPI_TOKEN}`,
-    // };
-
-    // const response = (await axios.post(
-    //   `${process.env.STRAPI_URL}/api/courses`,
-    //   { data: { title, user_id: userId } },
-    //   { headers }
-    // )) as { data: APIResponse<"api::course.course"> };
-
     return NextResponse.json(course);
   } catch (error) {
     console.log("[COURSES]", error);

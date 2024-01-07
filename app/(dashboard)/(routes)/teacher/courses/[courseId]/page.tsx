@@ -16,52 +16,47 @@ import AttachmentForm from "./_components/attachment-form";
 import ChaptersForm from "./_components/chapters-form";
 import { Banner } from "@/components/banner";
 import { Actions } from "./_components/actions";
-import { APIResponse, APIResponseCollection } from "@/types/types";
-
-export const getData = async (id: string) => {
-  const courseResponse = await fetch(
-    `${process.env.STRAPI_URL}/api/courses/${id}?populate=*`,
-    {
-      headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
-    }
-  );
-  const courseJson =
-    (await courseResponse.json()) as APIResponse<"api::course.course">;
-
-  const categoriesResponse = await fetch(
-    `${process.env.STRAPI_URL}/api/course-categories`,
-    {
-      headers: { Authorization: `Bearer ${process.env.STRAPI_CONTENT_TOKEN}` },
-    }
-  );
-
-  const categoriesJson =
-    (await categoriesResponse.json()) as APIResponseCollection<"api::course-category.course-category">;
-
-  return {
-    course: courseJson,
-    categories: categoriesJson,
-  };
-};
+import { db } from "@/lib/db";
 
 const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
   const { userId } = auth();
 
   if (!userId) return redirect("/");
 
-  const { course, categories } = await getData(params.courseId);
+  const course = await db.course.findUnique({
+    where: {
+      id: params.courseId,
+      userId,
+    },
+    include: {
+      chapters: {
+        orderBy: {
+          position: "asc",
+        },
+      },
+      attachments: {
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+  });
+
+  const categories = await db.category.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
 
   if (!course) return redirect("/");
 
   const requiredFields = [
-    course.data.attributes.title,
-    course.data.attributes.description,
-    course.data.attributes.image?.data,
-    course.data.attributes.price,
-    course.data.attributes.course_category,
-    course.data.attributes.course_chapters?.data?.some(
-      (chapter: any) => chapter
-    ),
+    course.title,
+    course.description,
+    course.imageUrl,
+    course.price,
+    course.categoryId,
+    course.chapters.some((chapter) => chapter.isPublished),
   ];
 
   const totalFields = requiredFields.length;
@@ -71,7 +66,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
 
   return (
     <>
-      {!course.data.attributes.publishedAt && (
+      {!course.isPublished && (
         <Banner label="This course is unpublished. It will not be visible to the students." />
       )}
       <div className="p-6">
@@ -85,7 +80,7 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
           <Actions
             disabled={!isComplete}
             courseId={params.courseId}
-            isPublished={course.data.attributes.publishedAt ? true : false}
+            isPublished={course.isPublished ? true : false}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
@@ -94,18 +89,16 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
               <IconBadge icon={LayoutDashboard} />
               <h2 className="text-xl">Customize your course</h2>
             </div>
-            <TitleForm initialData={course} courseId={course.data.id} />
-            <DescriptionForm initialData={course} courseId={course.data.id} />
-            <ImageForm initialData={course} courseId={course.data.id} />
+            <TitleForm initialData={course} courseId={course.id} />
+            <DescriptionForm initialData={course} courseId={course.id} />
+            <ImageForm initialData={course} courseId={course.id} />
             <CategoryForm
               initialData={course}
-              courseId={course.data.id}
-              options={categories.data.map(
-                (category: { id: number; attributes: { name: string } }) => ({
-                  label: category.attributes.name,
-                  value: category.id,
-                })
-              )}
+              courseId={course.id}
+              options={categories.map((category) => ({
+                label: category.name,
+                value: category.id,
+              }))}
             />
           </div>
           <div className="space-y-6">
@@ -114,19 +107,19 @@ const CourseIdPage = async ({ params }: { params: { courseId: string } }) => {
                 <IconBadge icon={ListChecks} />
                 <h2 className="Course chapters">Course chapters</h2>
               </div>
-              <ChaptersForm initialData={course} courseId={course.data.id} />
+              <ChaptersForm initialData={course} courseId={course.id} />
             </div>
             <div className="flex items-center gap-x-2">
               <IconBadge icon={CircleDollarSign} />
               <h2>Sell your course</h2>
             </div>
-            <PriceForm initialData={course} courseId={course.data.id} />
+            <PriceForm initialData={course} courseId={course.id} />
             <div>
               <div className="flex items-center gap-x-2">
                 <IconBadge icon={File} />
                 <h2>Resources & Attachments</h2>
               </div>
-              <AttachmentForm initialData={course} courseId={course.data.id} />
+              <AttachmentForm initialData={course} courseId={course.id} />
             </div>
           </div>
         </div>

@@ -21,10 +21,10 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Editor } from "@/components/editor";
 import { Preview } from "@/components/preview";
-import { APIResponse } from "@/types/types";
+import { Chapter } from "@prisma/client";
 
 interface ChapterDescriptionFormProps {
-  initialData: APIResponse<"api::course-chapter.course-chapter">;
+  initialData: Chapter;
   courseId: number | string;
   chapterId: number | string;
 }
@@ -45,7 +45,7 @@ const ChapterDescriptionForm = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { description: initialData.data.attributes.description },
+    defaultValues: { description: initialData?.description || "" },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -82,12 +82,12 @@ const ChapterDescriptionForm = ({
         <div
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.description && "text-slate-500 italic"
+            !initialData.description && "text-slate-500 italic"
           )}
         >
-          {!initialData.data.attributes.description && "No description"}
-          {initialData.data.attributes.description && (
-            <Preview value={initialData.data.attributes.description} />
+          {!initialData.description && "No description"}
+          {initialData.description && (
+            <Preview value={initialData.description} />
           )}
         </div>
       )}

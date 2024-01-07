@@ -4,58 +4,43 @@ import axios from "axios";
 import toast from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
-import {
-  ImageIcon,
-  Pencil,
-  PlusCircle,
-  UploadCloud,
-  UploadIcon,
-} from "lucide-react";
-import { useCallback, useState } from "react";
+import { ImageIcon, Pencil, PlusCircle, UploadCloud } from "lucide-react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useDropzone } from "react-dropzone";
-import { LoadingSpinner } from "@/components/loading-spinner";
-import { APIResponse } from "@/types/types";
+import { Course } from "@prisma/client";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FileUpload } from "@/components/file-upload";
 
 interface ImageFormProps {
-  initialData: APIResponse<"api::course.course">;
-  courseId: number;
+  initialData: Course;
+  courseId: string;
 }
+
+const formSchema = z.object({
+  imageUrl: z.string().min(1, {
+    message: "Image is required",
+  }),
+});
 
 const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const toggleEdit = () => setIsEditing((current) => !current);
 
   const router = useRouter();
 
-  const onDrop = useCallback(async (acceptedFiles: any[]) => {
-    // Do something with the files
-    const formData = new FormData();
-
-    if (!acceptedFiles || acceptedFiles.length === 0) {
-      return;
-    }
-
-    formData.append("files", acceptedFiles[0]);
-
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      setIsLoading(true);
-      const response = await axios.post(`/api/upload`, formData);
-      await axios.patch(`/api/courses/${courseId}`, {
-        image: response.data[0].id,
-      });
+      await axios.patch(`/api/courses/${courseId}`, values);
       toast.success("Course updated");
       toggleEdit();
       router.refresh();
     } catch {
       toast.error("Something went wrong");
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  };
 
   return (
     <div className="mt-6 border bg-slate-100 rounded-md p-4">
@@ -63,13 +48,13 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
         Course image
         <Button onClick={toggleEdit} variant="ghost">
           {isEditing && <>Cancel</>}
-          {!isEditing && !initialData.data.attributes.image && (
+          {!isEditing && !initialData.imageUrl && (
             <>
               <PlusCircle className="h-4 w-4 mr-2" />
               Add an image
             </>
           )}
-          {!isEditing && initialData.data.attributes.image && (
+          {!isEditing && initialData.imageUrl && (
             <>
               <Pencil className="h-4 w-4 mr-2" />
               Edit image
@@ -78,7 +63,7 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
         </Button>
       </div>
       {!isEditing &&
-        (!initialData.data.attributes.image?.data ? (
+        (!initialData.imageUrl ? (
           <div className="flex items-center justify-center h-60 bg-slate-200 rounded-md">
             <ImageIcon className="h-10 w-10 text-slate-500" />
           </div>
@@ -88,29 +73,22 @@ const ImageForm = ({ initialData, courseId }: ImageFormProps) => {
               alt="upload"
               fill
               className="object-cover rounded-md"
-              src={initialData.data.attributes.image.data.attributes.url}
+              src={initialData.imageUrl}
             />
           </div>
         ))}
-      {isEditing && !isLoading && (
-        <form className="space-y-4 mt-4">
-          <div {...getRootProps()}>
-            <input {...getInputProps()} />
-            {isDragActive ? (
-              <p>Drop the files here ...</p>
-            ) : (
-              <div className="flex flex-col gap-y-2 cursor-pointer items-center justify-center h-60 bg-slate-200 rounded-md">
-                <UploadCloud className="h-10 w-10 text-slate-500" />
-                <p>Choose file...</p>
-              </div>
-            )}
-            <div className="text-xs text-muted-foreground mt-4">
-              16:9 aspect ratio recommended
-            </div>
-          </div>
-        </form>
+      {isEditing && (
+        <div>
+          <FileUpload
+            endpoint="courseImage"
+            onChange={(url) => {
+              if (url) {
+                onSubmit({ imageUrl: url });
+              }
+            }}
+          />
+        </div>
       )}
-      {isEditing && isLoading && <LoadingSpinner className="h-10 w-10" />}
     </div>
   );
 };

@@ -21,16 +21,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { APIResponse } from "@/types/types";
+import { Chapter } from "@prisma/client";
 
 interface ChapterAccessFormProps {
-  initialData: APIResponse<"api::course-chapter.course-chapter">;
-  courseId: number | string;
-  chapterId: number | string;
+  initialData: Chapter;
+  courseId: string;
+  chapterId: string;
 }
 
 const formSchema = z.object({
-  is_free: z.boolean().default(false),
+  isFree: z.boolean().default(false),
 });
 
 const ChapterAccessForm = ({
@@ -45,7 +45,7 @@ const ChapterAccessForm = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { is_free: !!initialData.data.attributes.is_free },
+    defaultValues: { isFree: !!initialData.isFree },
   });
 
   const { isSubmitting, isValid } = form.formState;
@@ -82,10 +82,10 @@ const ChapterAccessForm = ({
         <div
           className={cn(
             "text-sm mt-2",
-            !initialData.data.attributes.is_free && "text-slate-500 italic"
+            !initialData.isFree && "text-slate-500 italic"
           )}
         >
-          {initialData.data.attributes.is_free ? (
+          {initialData.isFree ? (
             <>This chapter is free for preview</>
           ) : (
             <>This chapter is not free</>
@@ -100,7 +100,7 @@ const ChapterAccessForm = ({
           >
             <FormField
               control={form.control}
-              name="is_free"
+              name="isFree"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
