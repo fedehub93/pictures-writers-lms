@@ -1,7 +1,7 @@
-import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs";
-import axios from "axios";
 import { NextResponse } from "next/server";
+
+import { db } from "@/lib/db";
 
 export async function DELETE(
   req: Request,
